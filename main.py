@@ -7,11 +7,11 @@ CSV_PATH = 'data/sample.csv'
 
 data_df = pd.read_csv(CSV_PATH)
 data_df = data_df.drop(labels=['vendorid','Ehail_fee', 'MTA_tax', 'Improvement_surcharge', 
-                               'Total_amount', "Extra", "Tip_amount"],
+                               'Total_amount', "Extra", "Tip_amount", 'Tolls_amount'],
                        axis=1)
 
 
-# print('before: ',data_df.shape)
+print('before: ',data_df.shape)
 
 # we exclude instances that don't make sense
 data_df = data_df.loc[data_df.Trip_type.notna()] # exclude where trip_type is null
@@ -35,9 +35,26 @@ data_df = pd.concat([data_df,pd.get_dummies(data_df['rate_code'], prefix='rate_c
 data_df = pd.concat([data_df,pd.get_dummies(data_df['Payment_type'], prefix='Payment_type')],axis=1) 
 data_df = pd.concat([data_df,pd.get_dummies(data_df['Trip_type'], prefix='Trip_type')],axis=1) 
 data_df = data_df.drop(['Store_and_fwd_flag','rate_code','Payment_type','Trip_type'], axis=1)
-print(data_df)
+print('after: ', data_df.shape)
+
+
 
 # # We separate X and Y
-# X = data_df.drop('Fare_amount', axis=1)
-# y = data_df.Fare_amount
+X = data_df.drop('Fare_amount', axis=1)
+y = data_df.Fare_amount
 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state=15)
+
+regressor = LinearRegression()
+regressor.fit(X_train, y_train)
+
+
+print('intercept: ', regressor.intercept_)
+print('coefficients: ', regressor.coef_)
+
+
+y_pred = regressor.predict(X_test)
+
+comparison_df = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred})
+
+print(comparison_df)
